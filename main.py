@@ -1,4 +1,6 @@
 import base64
+import zlib
+import json
 
 class Converter():
   def __init__(self, mapdata_path):
@@ -8,7 +10,13 @@ class Converter():
     with open(self.mapdata_path, 'r') as f:
       self.mapdata_b64 = f.read()
 
-    self.mapdata_str = self.base64_decode(self.mapdata_str)
+    self.mapdata_str = self.base64_decode(self.mapdata_b64)
+    # Strip first json part which is something like {"alg":"RS256"}
+    # And last part which are keys??
+    self.mapdata = json.loads(b"}".join(converter.mapdata_str.split(b"}")[1:-2]) + b"}")
+
+    # Decode blocks_data
+    self.mapdata["blocks_data"] = self.base64_decode(self.mapdata["blocks_data"])
 
   def __str__(self):
     return f"mapdata_path = {self.mapdata_path}; mapdata_b64 = {self.mapdata_b64}; mapdata_str = {self.mapdata_str}"
