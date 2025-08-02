@@ -4,28 +4,33 @@ import json
 
 class Converter():
   def __init__(self, mapdata_path):
+    # mapdata_path: Path to bnl map file
+    # mapdata: json of the map content
     self.mapdata_path = mapdata_path
-
-    # Mapdata files are base64 encoded
-    with open(self.mapdata_path, 'r') as f:
-      self.mapdata_b64 = f.read()
-
-    self.mapdata_str = self.base64_decode(self.mapdata_b64)
-    # Strip first json part which is something like {"alg":"RS256"}
-    # And last part which are keys??
-    self.mapdata = json.loads(b"}".join(converter.mapdata_str.split(b"}")[1:-2]) + b"}")
-
-    # Decode blocks_data
-    self.mapdata["blocks_data"] = self.base64_decode(self.mapdata["blocks_data"])
+    self.mapdata = self.get_mapdata()
 
   def __str__(self):
-    return f"mapdata_path = {self.mapdata_path}; mapdata_b64 = {self.mapdata_b64}; mapdata_str = {self.mapdata_str}"
+    return f"mapdata_path = {self.mapdata_path}; mapdata = {self.mapdata}"
 
-  def base64_decode(self, text):
-    # Avoid incorrect padding
-    # https://stackoverflow.com/questions/2941995/python-ignore-incorrect-padding-error-when-base64-decoding
-    text += "=="
-    return base64.b64decode(text)
+  def get_mapdata(self):
+    # Mapdata files are base64 encoded json
+    # Get json
+    with open(self.mapdata_path, 'rb') as f:
+      base64_encoded_data = f.read()
+    # Remove alg and "block binary"
+    base64_encoded_data = base64_encoded_data.split(b".")[1]
+    # Pad data
+    #base64_encoded_data += b"=" * (len(base64_encoded_data) + (4 - len(base64_encoded_data) % 4) % 4)
+    base64_encoded_data += b"=="
+    # Decode base64 string and convert to dictionary
+    json_string = base64.b64decode(base64_encoded_data)
+    mapdata = json.loads(json_string)
+
+    # Decode and inflate block_data and colors_data
+    mapdata["blocks_data"] = zlib.decompress(base64.b64decode(mapdata["blocks_data"]))
+    mapdata["colors_data"] = zlib.decompress(base64.b64decode(mapdata["colors_data"]))  # this is unused
+
+    return mapdata
 
   def convert(self):
     pass
