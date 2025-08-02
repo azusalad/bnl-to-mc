@@ -2,3 +2,4 @@ mapdata
 old
 .vscode
 references
+__pycache__

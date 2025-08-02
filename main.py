@@ -1,3 +1,5 @@
+from block_mapping import block_mapping
+
 import base64
 import zlib
 import json
@@ -9,8 +11,10 @@ class Converter():
     self.mapdata_path = mapdata_path
     self.mapdata = self.get_mapdata()
 
+
   def __str__(self):
     return f"mapdata_path = {self.mapdata_path}; mapdata = {self.mapdata}"
+
 
   def get_mapdata(self):
     # Mapdata files are base64 encoded json
@@ -31,6 +35,26 @@ class Converter():
     mapdata["colors_data"] = zlib.decompress(base64.b64decode(mapdata["colors_data"]))  # this is unused
 
     return mapdata
+
+
+  def translate_block_array(self, src_array, src_height, src_length, src_width, dest_height, dest_length, dest_width):
+    # Initialize destination array
+    dest_placeholder_id = 0  # Air
+    dest_array = bytearray([dest_placeholder_id] * 100)
+
+    # Iterate through all coordinates
+    for x in range(src_length):
+      for y in range(src_height):
+        for z in range(src_width):
+          # Calculate source index and destination index
+          src_index = (src_width * (x * src_height + y) + z) * 4
+          dest_index = src_width * (y * src_length + x) + z
+          # Find corresponding Minecraft schematic id and replace in destination array
+          bnl_block_id = int(src_array[src_index])
+          dest_array[dest_index] = block_mapping[bnl_block_id]
+
+    return dest_array
+
 
   def convert(self):
     pass
