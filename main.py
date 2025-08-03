@@ -1,9 +1,12 @@
 from block_mapping import block_mapping
 
 from nbtlib import File, Compound, Int, ByteArray, String
+from pathlib import Path
+import argparse
 import base64
-import zlib
 import json
+import zlib
+
 
 class Converter():
   def __init__(self, mapdata_path):
@@ -121,5 +124,14 @@ class Converter():
 
 
 if __name__ == "__main__":
-  converter = Converter("mapdata")
-  converter.convert("mapdata.schematic")
+  parser = argparse.ArgumentParser(
+    description="Convert bnl maps to Minecraft schematics."
+  )
+  parser.add_argument("input_file", type=str, help="Path to bnl mapdata file to convert.")
+  parser.add_argument("output_file", type=str, nargs="?", help="Path to Minecraft schematic to save converted data.  Defaults to the input file with the .schematic extension.")
+  args = parser.parse_args()
+  input_file = args.input_file
+  output_file = args.output_file if args.output_file else Path(input_file).stem + '.schematic'
+
+  converter = Converter(input_file)
+  converter.convert(output_file)
