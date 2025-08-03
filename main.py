@@ -54,11 +54,12 @@ class Converter():
     return mapdata
 
 
-  def translate_block_array(self, src_array, height, length, width):
+  def translate_block_array(self, schema, src_array, height, length, width):
     """
     Convert bnl block array to Minecraft schematic block array.
 
     Args:
+        schema (int): Schema of bnl mapdata file.
         src_array (bytearray): Bnl block array.
         height (int): Map height.
         length (int): Map length.
@@ -70,19 +71,23 @@ class Converter():
     # Initialize destination array
     dest_placeholder_id = 0  # Air
     dest_array = bytearray([dest_placeholder_id] * (height * length * width))
+    bytes_per_block = 4 if schema == 4 else 6
+    if schema not in [4,5,6]:
+      print("Warning: Schema is {schema}.  Conversion might fail.")
 
     # Iterate through all coordinates
     for x in range(length):
       for y in range(height):
         for z in range(width):
           # Calculate source index and destination index
-          src_index = (width * (x * height + y) + z) * 4
+          src_index = (width * (x * height + y) + z) * bytes_per_block
           dest_index = width * (y * length + x) + z
           # Find corresponding Minecraft schematic id and replace in destination array
           bnl_block_id = int(src_array[src_index])
-          dest_array[dest_index] = block_mapping[bnl_block_id]
+          dest_array[dest_index] = block_mapping[bnl_block_id] if bnl_block_id in block_mapping else dest_placeholder_id
   
     return dest_array
+      
 
 
   def write_schematic(self, dest_path, block_array):
@@ -118,7 +123,7 @@ class Converter():
         dest_path (_type_): Destination filepath.
     """    
     # Create destination block array
-    dest_block_array = self.translate_block_array(self.mapdata["blocks_data"], self.height, self.length, self.width)
+    dest_block_array = self.translate_block_array(self.mapdata["schema"],self.mapdata["blocks_data"], self.height, self.length, self.width)
     # Write to schematic file
     self.write_schematic(dest_path, dest_block_array)
 

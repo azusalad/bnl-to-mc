@@ -24,7 +24,7 @@ block_mapping = {
     21: 24,  # block_sandbag
     22: 101,  # block_concrete_fence
     #23: ,  # block_conditioner
-    #24: ,  # block_tube
+    24: 85,  # block_tube
     25: 102,  # block_window
     #26: ,  # block_holeframe
     27: 1,  # block_rock
@@ -35,7 +35,7 @@ block_mapping = {
     32: 51,  # block_fire
     33: 64,  # block_force_editor
     34: 32,  # block_magic_mud
-    35: 198,  # block_lamp_pole
+    35: 85,  # block_lamp_pole
     36: 85,  # block_fence_scifi
     #37: ,  # block_bear_trap
     38: 42,  # block_metal_framework
