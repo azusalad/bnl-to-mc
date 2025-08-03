@@ -72,7 +72,7 @@ class Converter():
     dest_array = bytearray([dest_placeholder_id] * (self.height * self.length * self.width))
     bytes_per_block = 4 if schema == 4 else 6
     if schema not in [4,5,6]:
-      print("Warning: Schema is {schema}.  Conversion might fail.")
+      print(f"Warning: Bnl map schema is {schema}.  Conversion might fail.")
 
     # Iterate through all coordinates
     for x in range(self.length):
