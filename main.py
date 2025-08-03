@@ -56,44 +56,41 @@ class Converter():
     return mapdata
 
 
-  def translate_block_array(self, schema, plane, plane_position, src_array, height, length, width):
+  def translate_block_array(self):
     """
     Convert bnl block array to Minecraft schematic block array.
 
-    Args:
-        schema (int): Schema of bnl mapdata file.
-        src_array (bytearray): Bnl block array.
-        height (int): Map height.
-        length (int): Map length.
-        width (int): Map width.
-
     Returns:
         bytearray: Block array for Minecraft schematic.
-    """    
+    """
+    schema = self.mapdata["schema"]
+    plane = self.mapdata["properties"]["plane"]
+    plane_position = int(self.mapdata["properties"]["plane_position"]) + 1
+    src_array = self.mapdata["blocks_data"]
     # Initialize destination array
     dest_placeholder_id = 0  # Air
-    dest_array = bytearray([dest_placeholder_id] * (height * length * width))
+    dest_array = bytearray([dest_placeholder_id] * (self.height * self.length * self.width))
     bytes_per_block = 4 if schema == 4 else 6
     if schema not in [4,5,6]:
       print("Warning: Schema is {schema}.  Conversion might fail.")
 
     # Iterate through all coordinates
-    for x in range(length):
-      for y in range(height):
-        for z in range(width):
+    for x in range(self.length):
+      for y in range(self.height):
+        for z in range(self.width):
           # Calculate source index and destination index
-          src_index = (width * (x * height + y) + z) * bytes_per_block
-          dest_index = width * (y * length + x) + z
+          src_index = (self.width * (x * self.height + y) + z) * bytes_per_block
+          dest_index = self.width * (y * self.length + x) + z
           # Find corresponding Minecraft schematic id and replace in destination array
           bnl_block_id = int(src_array[src_index])
           dest_array[dest_index] = block_mapping[bnl_block_id] if bnl_block_id in block_mapping else dest_placeholder_id
 
     # Add plane
     if self.plane:
-      for x in range(length):
+      for x in range(self.length):
         for y in range(plane_position):
-          for z in range(width):
-            dest_index = width * (y * length + x) + z
+          for z in range(self.width):
+            dest_index = self.width * (y * self.length + x) + z
             if dest_array[dest_index] == dest_placeholder_id:
               dest_array[dest_index] = plane_mapping[plane]
   
@@ -134,7 +131,7 @@ class Converter():
         dest_path (_type_): Destination filepath.
     """    
     # Create destination block array
-    dest_block_array = self.translate_block_array(self.mapdata["schema"], self.mapdata["properties"]["plane"], int(self.mapdata["properties"]["plane_position"]) + 1, self.mapdata["blocks_data"], self.height, self.length, self.width)
+    dest_block_array = self.translate_block_array()
     # Write to schematic file
     self.write_schematic(dest_path, dest_block_array)
 
