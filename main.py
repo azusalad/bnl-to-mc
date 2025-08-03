@@ -7,10 +7,17 @@ import json
 
 class Converter():
   def __init__(self, mapdata_path):
-    # mapdata_path: Path to bnl map file
-    # mapdata: json of the map content
+    """
+    Initialize Converter object.
+
+    Args:
+        mapdata_path (str): Path to bnl mapdata file.
+    """    
     self.mapdata_path = mapdata_path
     self.mapdata = self.get_mapdata()
+    self.length = self.mapdata["size"]["x"]
+    self.height = self.mapdata["size"]["y"]
+    self.width = self.mapdata["size"]["z"]
 
 
   def __str__(self):
@@ -18,7 +25,13 @@ class Converter():
 
 
   def get_mapdata(self):
-    # Mapdata files are base64 encoded json
+    """
+    Bnl mapdata files are base64 encoded json.
+    Get the json of the file and decode/inflate blocks_data/colors_data.
+
+    Returns:
+        dictionary: JSON of the bnl mapdata file.
+    """    
     # Get json
     with open(self.mapdata_path, 'rb') as f:
       base64_encoded_data = f.read()
@@ -38,18 +51,30 @@ class Converter():
     return mapdata
 
 
-  def translate_block_array(self, src_array, src_height, src_length, src_width, dest_height, dest_length, dest_width):
+  def translate_block_array(self, src_array, height, length, width):
+    """
+    Convert bnl block array to Minecraft schematic block array.
+
+    Args:
+        src_array (bytearray): Bnl block array.
+        height (int): Map height.
+        length (int): Map length.
+        width (int): Map width.
+
+    Returns:
+        bytearray: Block array for Minecraft schematic.
+    """    
     # Initialize destination array
     dest_placeholder_id = 0  # Air
-    dest_array = bytearray([dest_placeholder_id] * (src_height * src_length * src_width))
+    dest_array = bytearray([dest_placeholder_id] * (height * length * width))
 
     # Iterate through all coordinates
-    for x in range(src_length):
-      for y in range(src_height):
-        for z in range(src_width):
+    for x in range(length):
+      for y in range(height):
+        for z in range(width):
           # Calculate source index and destination index
-          src_index = (src_width * (x * src_height + y) + z) * 4
-          dest_index = src_width * (y * src_length + x) + z
+          src_index = (width * (x * height + y) + z) * 4
+          dest_index = width * (y * length + x) + z
           # Find corresponding Minecraft schematic id and replace in destination array
           bnl_block_id = int(src_array[src_index])
           dest_array[dest_index] = block_mapping[bnl_block_id]
@@ -58,15 +83,19 @@ class Converter():
 
 
   def write_schematic(self, dest_path, block_array):
-    src_length = self.mapdata["size"]["x"]
-    src_height = self.mapdata["size"]["y"]
-    src_width = self.mapdata["size"]["z"]
+    """
+    Write Minecraft schematic to file.
+
+    Args:
+        dest_path (_type_): Destination filepath.
+        block_array (bytearray): Block array for schematic.
+    """    
     # Create NBT schematic file
     root_tag = Compound({
       "Schematic": Compound({
-        "Width": Int(src_width),
-        "Length": Int(src_length),
-        "Height": Int(src_height),
+        "Width": Int(self.width),
+        "Length": Int(self.length),
+        "Height": Int(self.height),
         "Blocks": ByteArray(block_array),
         "Data": ByteArray(bytearray([0] * len(block_array))),
         "Materials": String("Alpha")
@@ -78,13 +107,15 @@ class Converter():
     nbt_file.save(dest_path)
 
 
-
   def convert(self, dest_path):
+    """
+    Convert bnl map to Minecraft schematic and write to file.
+
+    Args:
+        dest_path (_type_): Destination filepath.
+    """    
     # Create destination block array
-    src_length = self.mapdata["size"]["x"]
-    src_height = self.mapdata["size"]["y"]
-    src_width = self.mapdata["size"]["z"]
-    dest_block_array = self.translate_block_array(self.mapdata["blocks_data"], src_height, src_length, src_width, src_height, src_length, src_width)
+    dest_block_array = self.translate_block_array(self.mapdata["blocks_data"], self.height, self.length, self.width)
     # Write to schematic file
     self.write_schematic(dest_path, dest_block_array)
 
