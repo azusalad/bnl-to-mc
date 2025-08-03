@@ -27,7 +27,7 @@ block_mapping = {
     24: 85,  # block_tube
     25: 102,  # block_window
     #26: ,  # block_holeframe
-    27: 1,  # block_rock
+    27: 98,  # block_rock
     #28: ,  # block_debris
     29: 171,  # block_glue
     #30: ,  # block_stone_spikes
@@ -61,7 +61,7 @@ block_mapping = {
     58: 5,  # block_crate_player
     58: 5,  # block_crate_level_200_hero
     59: 0,  # block_air_locked
-    60: 78,  # block_snow
+    60: 80,  # block_snow
     61: 79,  # block_ice
     #65: ,  # block_banana_peel
     66: 98,  # block_brick_concrete
