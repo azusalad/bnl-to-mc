@@ -82,3 +82,10 @@ block_mapping = {
     #83: ,  # block_caltrops_kreepy
     85: 45  # block_brick_trondson
 }
+
+plane_mapping = {
+    # Bnl plane type: minecraft schematic id
+    "WaterPlane": 8,
+    "AcidPlane": 8,
+    "LavaPlane": 10
+}

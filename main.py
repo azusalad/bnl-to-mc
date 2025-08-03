@@ -1,4 +1,4 @@
-from block_mapping import block_mapping
+from mappings import block_mapping, plane_mapping
 
 from nbtlib import File, Compound, Int, ByteArray, String
 from pathlib import Path
@@ -54,7 +54,7 @@ class Converter():
     return mapdata
 
 
-  def translate_block_array(self, schema, src_array, height, length, width):
+  def translate_block_array(self, schema, plane, plane_position, src_array, height, length, width):
     """
     Convert bnl block array to Minecraft schematic block array.
 
@@ -85,6 +85,14 @@ class Converter():
           # Find corresponding Minecraft schematic id and replace in destination array
           bnl_block_id = int(src_array[src_index])
           dest_array[dest_index] = block_mapping[bnl_block_id] if bnl_block_id in block_mapping else dest_placeholder_id
+
+    # Add plane
+    for x in range(length):
+      for y in range(plane_position):
+        for z in range(width):
+          dest_index = width * (y * length + x) + z
+          if dest_array[dest_index] == dest_placeholder_id:
+            dest_array[dest_index] = plane_mapping[plane]
   
     return dest_array
       
@@ -123,7 +131,7 @@ class Converter():
         dest_path (_type_): Destination filepath.
     """    
     # Create destination block array
-    dest_block_array = self.translate_block_array(self.mapdata["schema"],self.mapdata["blocks_data"], self.height, self.length, self.width)
+    dest_block_array = self.translate_block_array(self.mapdata["schema"], self.mapdata["properties"]["plane"], int(self.mapdata["properties"]["plane_position"]) + 1, self.mapdata["blocks_data"], self.height, self.length, self.width)
     # Write to schematic file
     self.write_schematic(dest_path, dest_block_array)
 
