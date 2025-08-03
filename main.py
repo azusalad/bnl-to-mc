@@ -1,5 +1,6 @@
 from block_mapping import block_mapping
 
+from nbtlib import File, Compound, Int, ByteArray, String
 import base64
 import zlib
 import json
@@ -40,7 +41,7 @@ class Converter():
   def translate_block_array(self, src_array, src_height, src_length, src_width, dest_height, dest_length, dest_width):
     # Initialize destination array
     dest_placeholder_id = 0  # Air
-    dest_array = bytearray([dest_placeholder_id] * 100)
+    dest_array = bytearray([dest_placeholder_id] * (src_height * src_length * src_width))
 
     # Iterate through all coordinates
     for x in range(src_length):
@@ -52,14 +53,42 @@ class Converter():
           # Find corresponding Minecraft schematic id and replace in destination array
           bnl_block_id = int(src_array[src_index])
           dest_array[dest_index] = block_mapping[bnl_block_id]
-
+  
     return dest_array
 
 
-  def convert(self):
-    pass
+  def write_schematic(self, dest_path, block_array):
+    src_length = self.mapdata["size"]["x"]
+    src_height = self.mapdata["size"]["y"]
+    src_width = self.mapdata["size"]["z"]
+    # Create NBT schematic file
+    root_tag = Compound({
+      "Schematic": Compound({
+        "Width": Int(src_width),
+        "Length": Int(src_length),
+        "Height": Int(src_height),
+        "Blocks": ByteArray(block_array),
+        "Data": ByteArray(bytearray([0] * len(block_array))),
+        "Materials": String("Alpha")
+      })
+    })
+
+    # Save the schematic file
+    nbt_file = File(root_tag, gzipped=True)
+    nbt_file.save(dest_path)
+
+
+
+  def convert(self, dest_path):
+    # Create destination block array
+    src_length = self.mapdata["size"]["x"]
+    src_height = self.mapdata["size"]["y"]
+    src_width = self.mapdata["size"]["z"]
+    dest_block_array = self.translate_block_array(self.mapdata["blocks_data"], src_height, src_length, src_width, src_height, src_length, src_width)
+    # Write to schematic file
+    self.write_schematic(dest_path, dest_block_array)
 
 
 if __name__ == "__main__":
   converter = Converter("mapdata")
-  converter.convert()
+  converter.convert("mapdata.schematic")
