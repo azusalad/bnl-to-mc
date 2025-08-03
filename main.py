@@ -9,14 +9,16 @@ import zlib
 
 
 class Converter():
-  def __init__(self, mapdata_path):
+  def __init__(self, mapdata_path, plane):
     """
     Initialize Converter object.
 
     Args:
         mapdata_path (str): Path to bnl mapdata file.
+        plane (bool): Whether to add the water/lava plane or not.
     """    
     self.mapdata_path = mapdata_path
+    self.plane = plane
     self.mapdata = self.get_mapdata()
     self.length = self.mapdata["size"]["x"]
     self.height = self.mapdata["size"]["y"]
@@ -87,12 +89,13 @@ class Converter():
           dest_array[dest_index] = block_mapping[bnl_block_id] if bnl_block_id in block_mapping else dest_placeholder_id
 
     # Add plane
-    for x in range(length):
-      for y in range(plane_position):
-        for z in range(width):
-          dest_index = width * (y * length + x) + z
-          if dest_array[dest_index] == dest_placeholder_id:
-            dest_array[dest_index] = plane_mapping[plane]
+    if self.plane:
+      for x in range(length):
+        for y in range(plane_position):
+          for z in range(width):
+            dest_index = width * (y * length + x) + z
+            if dest_array[dest_index] == dest_placeholder_id:
+              dest_array[dest_index] = plane_mapping[plane]
   
     return dest_array
       
@@ -142,9 +145,11 @@ if __name__ == "__main__":
   )
   parser.add_argument("input_file", type=str, help="Path to bnl mapdata file to convert.")
   parser.add_argument("output_file", type=str, nargs="?", help="Path to Minecraft schematic to save converted data.  Defaults to the input file with the .schematic extension.")
+  parser.add_argument("--no-plane", action="store_true", help="Disable adding lava/water plane to converted map.")
   args = parser.parse_args()
   input_file = args.input_file
   output_file = args.output_file if args.output_file else Path(input_file).stem + '.schematic'
+  plane = not args.no_plane
 
-  converter = Converter(input_file)
+  converter = Converter(input_file, plane)
   converter.convert(output_file)
